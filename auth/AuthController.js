@@ -124,7 +124,7 @@ router.post('/sendemail', function (req, res) {
         'Hi ' + req.body.email + ',\n\n' +
         'You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n' +
         'Please click on the following link, or paste this into your browser to complete the process:\n\n' +
-        'https://' + req.headers.host + '/auth/reset/' + token + '\n\n' +
+        'https://' + req.headers.host + '/reset/' + token + '\n\n' +
         'If you don’t use this link within 3 hours, it will expire. To get a new password reset link, visit the forgot password page.\n\n\n' +
         'Thanks\n'
     };
