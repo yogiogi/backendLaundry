@@ -8,6 +8,7 @@ var VerifyToken = require('./VerifyToken');
 router.use(bodyParser.urlencoded({ extended: false }));
 router.use(bodyParser.json());
 var User = require('../user/User');
+var moment = require('moment');
 
 /**
  * Configure JWT
@@ -22,11 +23,24 @@ router.post('/login', function (req, res) {
 
   User.findOne({ email: req.body.email }, function (err, user) {
     if (err) return res.status(500).send('Error on the server.');
-    if (!user) return res.status(404).send('No user found.');
+    if (!user) return res.status(404).send({
+      auth: false,
+      code: 500,
+      token: null,
+      message: "Email Not Found",
+    });
+
+    console.log("save passwrod", user.password);
+    console.log("return passwrod", req.body.password);
 
     // check if the password is valid
     var passwordIsValid = bcrypt.compareSync(req.body.password, user.password);
-    if (!passwordIsValid) return res.status(401).send({ auth: false, token: null });
+    if (!passwordIsValid) return res.status(401).send({
+      auth: false,
+      code: 500,
+      token: null,
+      message: "Invalid Password",
+    });
 
     // if user is found and password is valid
     // create a token
@@ -36,7 +50,30 @@ router.post('/login', function (req, res) {
 
     var name = user.name;
     // return the information including token as JSON
-    res.status(200).send({ auth: true, token: token, name: name });
+    res.status(200).send
+      ({
+        auth: true,
+        code: 200,
+        token: token,
+        message: "Login Succesfully",
+        data: {
+          user: {
+            id: user._id,
+            email: user.email,
+            password: "",
+            firstname: user.firstname,
+            lastname: user.lastname,
+            created_at: {
+              time: user.created_at,
+              valid: true,
+            },
+            updated_at: {
+              time: "",
+              valid: true,
+            }
+          }
+        }
+      });
   });
 
 });
@@ -48,14 +85,16 @@ router.get('/logout', function (req, res) {
 router.post('/register', function (req, res) {
   var hashedPassword = bcrypt.hashSync(req.body.password, 8);
 
-  User.findOne({ email: req.body.email }, function (err, user) {
+  User.findOne({ email: req.body.email }, function (err, email) {
+    // if (email) return res.status(404).send('No user found.');
+    if (email) return res.status(400).send({ auth: false, code: 400, message: 'The email address you have entered is already associated with another account.' });
 
-    if (user) return res.status(400).send({ auth: false, code: 500, message: 'The email address you have entered is already associated with another account.' });
     User.create({
       email: req.body.email,
       firstname: req.body.firstname,
       lastname: req.body.lastname,
-      password: hashedPassword
+      password: hashedPassword,
+      created_at: moment().format(),
     },
       function (err, user) {
         if (err) return res.status(500).send({ auth: false, code: 500, message: 'There was a problem registering the user' });
@@ -116,7 +155,7 @@ router.post('/sendemail', function (req, res) {
 
     // setup email data with unicode symbols
     var mailOptions = {
-      from: 'passwordManager@demo.com',
+      from: 'passwordManager@de.com',
       to: req.body.email,
       subject: 'Query',
 
