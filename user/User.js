@@ -8,7 +8,9 @@ var UserSchema = new mongoose.Schema({
   email: String,
   password: String,
   created_at: Date,
-  updated_at: Date,
+  updated_at: { type: Date, default: new Date() },
+  resetPasswordToken: String,
+  resetPasswordExpires: Date
 }, { _id: false });
 
 // mongoose.model('User', UserSchema);
